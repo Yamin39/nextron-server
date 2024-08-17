@@ -31,18 +31,32 @@ async function run() {
     // get products
     app.get("/products", async (req, res) => {
       const search = req.query.search;
+      
+
+      // queries
+      const query = {};
 
       // query for search
-      const query = {};
       if (search !== "") {
         query.name = {
           $regex: search,
           $options: "i",
         };
       }
+
+    
       
         const cursor = productsCollection.find(query);
         const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // get categories 
+    app.get("/categories", async (req, res) => {
+        const products = await  productsCollection.find().toArray();
+
+      const result = [...new Set(products.map(product => product.category))];
+      
       res.send(result);
     });
     

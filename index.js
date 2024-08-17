@@ -59,6 +59,12 @@ async function run() {
         };
       }
 
+      // query for brands
+      if (req.query.brands) {
+        const brands = req.query.brands.split(",");
+        query.brand = { $in: brands };
+      }
+
       const cursor = productsCollection.find(query);
       const result = await cursor.toArray();
       res.send(result);

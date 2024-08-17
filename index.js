@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion } = require("mongodb");
 const port = process.env.PORT || 5000;
 
 // middleware
@@ -18,7 +18,7 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 
 async function run() {
@@ -31,7 +31,7 @@ async function run() {
     // get products
     app.get("/products", async (req, res) => {
       const search = req.query.search;
-      
+      const category = req.query.category;
 
       // queries
       const query = {};
@@ -44,22 +44,25 @@ async function run() {
         };
       }
 
-    
-      
-        const cursor = productsCollection.find(query);
-        const result = await cursor.toArray();
+      // query for category
+      if (category !== "") {
+        query.category = category;
+      }
+
+      const cursor = productsCollection.find(query);
+      const result = await cursor.toArray();
       res.send(result);
     });
 
-    // get categories 
+    // get categories
     app.get("/categories", async (req, res) => {
-        const products = await  productsCollection.find().toArray();
+      const products = await productsCollection.find().toArray();
 
-      const result = [...new Set(products.map(product => product.category))];
-      
+      const result = [...new Set(products.map((product) => product.category))];
+
       res.send(result);
     });
-    
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");

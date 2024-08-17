@@ -32,6 +32,8 @@ async function run() {
     app.get("/products", async (req, res) => {
       const search = req.query.search;
       const category = req.query.category;
+      const minPrice = req.query.minPrice;
+      const maxPrice = req.query.maxPrice;
 
       // queries
       const query = {};
@@ -49,6 +51,14 @@ async function run() {
         query.category = category;
       }
 
+      // query for price range
+      if (minPrice && maxPrice) {
+        query.price = {
+          $gte: parseInt(minPrice),
+          $lte: parseInt(maxPrice),
+        };
+      }
+
       const cursor = productsCollection.find(query);
       const result = await cursor.toArray();
       res.send(result);
@@ -57,9 +67,7 @@ async function run() {
     // get categories
     app.get("/categories", async (req, res) => {
       const products = await productsCollection.find().toArray();
-
       const result = [...new Set(products.map((product) => product.category))];
-
       res.send(result);
     });
 

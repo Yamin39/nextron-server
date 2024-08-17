@@ -26,11 +26,23 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-    const roomsCollection = client.db("nextronDB").collection("products");
+    const productsCollection = client.db("nextronDB").collection("products");
 
     // get products
     app.get("/products", async (req, res) => {
-      const result = await roomsCollection.find().toArray();
+      const search = req.query.search;
+
+      // query for search
+      const query = {};
+      if (search !== "") {
+        query.name = {
+          $regex: search,
+          $options: "i",
+        };
+      }
+      
+        const cursor = productsCollection.find(query);
+        const result = await cursor.toArray();
       res.send(result);
     });
     

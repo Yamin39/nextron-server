@@ -35,6 +35,8 @@ async function run() {
       const minPrice = req.query.minPrice;
       const maxPrice = req.query.maxPrice;
       const sortText = req.query.sort;
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
 
       // queries
       const query = {};
@@ -79,9 +81,56 @@ async function run() {
         sort.time = 1;
       }
 
-      const cursor = productsCollection.find(query, { sort });
+      const cursor = productsCollection
+        .find(query, { sort })
+        .skip(page * size)
+        .limit(size);
+
       const result = await cursor.toArray();
       res.send(result);
+    });
+
+    // get products count
+    app.get("/products/count", async (req, res) => {
+      const search = req.query.search;
+      const category = req.query.category;
+      const minPrice = req.query.minPrice;
+      const maxPrice = req.query.maxPrice;
+
+      // queries
+      const query = {};
+
+      // query for search
+      if (search) {
+        query.name = {
+          $regex: search,
+          $options: "i",
+        };
+      }
+
+      // query for category
+      if (category) {
+        query.category = category;
+      }
+
+      // query for price range
+      if (minPrice && maxPrice) {
+        query.price = {
+          $gte: parseInt(minPrice),
+          $lte: parseInt(maxPrice),
+        };
+      }
+
+      // query for brands
+      if (req.query.brands) {
+        const brands = req.query.brands.split(",");
+        query.brand = { $in: brands };
+      }
+
+      const products = await productsCollection.find(query).toArray();
+      const count = products?.length;
+      console.log("dfr", count);
+      res.send({ count });
     });
 
     // get categories
@@ -94,6 +143,7 @@ async function run() {
     // get brands
     app.get("/brands", async (req, res) => {
       const products = await productsCollection.find().toArray();
+
       const result = [...new Set(products.map((product) => product.brand))];
       res.send(result);
     });

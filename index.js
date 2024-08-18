@@ -34,12 +34,13 @@ async function run() {
       const category = req.query.category;
       const minPrice = req.query.minPrice;
       const maxPrice = req.query.maxPrice;
+      const sortText = req.query.sort;
 
       // queries
       const query = {};
 
       // query for search
-      if (search !== "") {
+      if (search) {
         query.name = {
           $regex: search,
           $options: "i",
@@ -47,7 +48,7 @@ async function run() {
       }
 
       // query for category
-      if (category !== "") {
+      if (category) {
         query.category = category;
       }
 
@@ -65,7 +66,20 @@ async function run() {
         query.brand = { $in: brands };
       }
 
-      const cursor = productsCollection.find(query);
+      // sort
+      const sort = {};
+
+      if (sortText === "asc") {
+        sort.price = 1;
+      } else if (sortText === "desc") {
+        sort.price = -1;
+      } else if (sortText === "newest") {
+        sort.time = -1;
+      } else if (sortText === "oldest") {
+        sort.time = 1;
+      }
+
+      const cursor = productsCollection.find(query, { sort });
       const result = await cursor.toArray();
       res.send(result);
     });
